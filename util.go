@@ -1,4 +1,4 @@
-package apple_validate
+package apple_validator
 
 import (
 	"encoding/base64"

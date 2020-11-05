@@ -1,4 +1,4 @@
-package apple_validate
+package apple_validator
 
 import (
 	"encoding/json"
@@ -8,19 +8,22 @@ import (
 	"strings"
 )
 
-func (p *Parser) CheckIdentityCode(code string) (*TokenResponse, error) {
-	if p.clientID == "" {
+func (v *Validator) CheckIdentityCode(code string) (*TokenResponse, error) {
+	if code == "" {
+		return nil, ErrInvalidIdentityCode
+	}
+	if v.clientID == "" {
 		return nil, ErrInvalidClientID
 	}
-	if p.clientSecret == "" {
+	if v.clientSecret == "" {
 		return nil, ErrInvalidClientSecret
 	}
 	//验证IdentityCode时需要填写redirect_uri参数，且redirect_uri参数必须是https协议
-	if uri := strings.ToLower(p.redirectUri); strings.HasPrefix(uri, "https://") {
+	if uri := strings.ToLower(v.redirectUri); strings.HasPrefix(uri, "https://") {
 		return nil, ErrInvalidRedirectURI
 	}
 
-	param := fmt.Sprintf("client_id=%s&client_secret=%s&code=%s&grant_type=authorization_code&redirect_uri=%s", p.clientID, p.clientSecret, code, p.redirectUri)
+	param := fmt.Sprintf("client_id=%s&client_secret=%s&code=%s&grant_type=authorization_code&redirect_uri=%s", v.clientID, v.clientSecret, code, v.redirectUri)
 	rder := strings.NewReader(param)
 	response, err := http.Post("https://appleid.apple.com/auth/token", "application/x-www-form-urlencoded", rder)
 	if err != nil {
@@ -44,14 +47,17 @@ func (p *Parser) CheckIdentityCode(code string) (*TokenResponse, error) {
 	return tkResult, nil
 }
 
-func (p *Parser) CheckRefreshToken(refreshToken string) (*TokenResponse, error) {
-	if p.clientID == "" {
+func (v *Validator) CheckRefreshToken(refreshToken string) (*TokenResponse, error) {
+	if refreshToken == "" {
+		return nil, ErrInvalidRefreshToken
+	}
+	if v.clientID == "" {
 		return nil, ErrInvalidClientID
 	}
-	if p.clientSecret == "" {
+	if v.clientSecret == "" {
 		return nil, ErrInvalidClientSecret
 	}
-	param := fmt.Sprintf("client_id=%s&client_secret=%s&grant_type=refresh_token&refresh_token=%s", p.clientID, p.clientSecret, refreshToken)
+	param := fmt.Sprintf("client_id=%s&client_secret=%s&grant_type=refresh_token&refresh_token=%s", v.clientID, v.clientSecret, refreshToken)
 	rder := strings.NewReader(param)
 	response, err := http.Post("https://appleid.apple.com/auth/token", "application/x-www-form-urlencoded", rder)
 	if err != nil {

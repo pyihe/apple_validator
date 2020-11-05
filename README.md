@@ -7,18 +7,18 @@ Validate Sign in With Apple(IdentityCode Or IdentityToken Or RefreshToken).
 ```go
 package main
 
-import "github.com/pyihe/apple_validate"
+import "github.com/pyihe/apple_validator"
 
 func main() {
     var appleToken = "your token"
-    var jwtToken apple_validate.JWTToken
+    var jwtToken apple_validator.JWTToken
     var err error    
     
-    parser := apple_validate.NewParser()
-    //here if you want to check IdentityCode or RefreshToken, then you need to give the client_id, client_secret, redirect_uri param
-    // parser := apple_validate.NewParser(apple_validate.WithClientID(), apple_validate.WithClientSecret(), apple_validate.WithRedirectUri())
+    validator := apple_validator.NewValidator()
+    //here if you want to check IdentityCode or RefreshToken, then you need to give the client_id, client_secret, redirect_uri params
+    // validator := apple_validator.NewValidator(apple_validate.WithClientID(), apple_validate.WithClientSecret(), apple_validate.WithRedirectUri())
     
-    if jwtToken, err = parser.CheckIdentityToken(appleToken); err != nil {
+    if jwtToken, err = validator.CheckIdentityToken(appleToken); err != nil {
         handleErr(err)
         return 
     }
@@ -31,7 +31,7 @@ func main() {
     }
 
     //check identityCode
-    //if tokenResponse, err = parser.CheckIdentityCode(appleCode); err != nil {
+    //if tokenResponse, err = validator.CheckIdentityCode(appleCode); err != nil {
     //    handleErr(err)
     //    return 
     //}   

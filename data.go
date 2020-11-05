@@ -1,4 +1,4 @@
-package apple_validate
+package apple_validator
 
 import (
 	"errors"
@@ -17,6 +17,9 @@ var (
 	ErrInvalidRedirectURI  = errors.New("invalid redirect_uri")
 	ErrTokenExpired        = errors.New("token expired")
 	ErrInvalidIssValue     = errors.New("invalid iss value")
+	ErrInvalidRefreshToken = errors.New("invalid refresh token")
+	ErrInvalidIdentityCode = errors.New("invalid identity code")
+	ErrInvalidIdentityToken = errors.New("invalid identity token")
 )
 
 type JWTToken interface {

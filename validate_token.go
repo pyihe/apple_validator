@@ -1,4 +1,4 @@
-package apple_validate
+package apple_validator
 
 import (
 	"crypto"
@@ -12,7 +12,10 @@ import (
 	"strings"
 )
 
-func (p *Parser) CheckIdentityToken(token string) (JWTToken, error) {
+func (v *Validator) CheckIdentityToken(token string) (JWTToken, error) {
+	if token == "" {
+		return nil, ErrInvalidIdentityToken
+	}
 	appleToken, err := parseToken(token)
 	if err != nil {
 		return nil, err
