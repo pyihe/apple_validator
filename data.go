@@ -9,16 +9,16 @@ import (
 )
 
 var (
-	ErrInvalidHashType     = errors.New("invalid hash type")
-	ErrInvalidTokenFormat  = errors.New("invalid token")
-	ErrFetchKeysFail       = errors.New("invalid rsa public key")
-	ErrInvalidClientID     = errors.New("invalid client_id")
-	ErrInvalidClientSecret = errors.New("invalid client_secret")
-	ErrInvalidRedirectURI  = errors.New("invalid redirect_uri")
-	ErrTokenExpired        = errors.New("token expired")
-	ErrInvalidIssValue     = errors.New("invalid iss value")
-	ErrInvalidRefreshToken = errors.New("invalid refresh token")
-	ErrInvalidIdentityCode = errors.New("invalid identity code")
+	ErrInvalidHashType      = errors.New("invalid hash type")
+	ErrInvalidTokenFormat   = errors.New("invalid token")
+	ErrFetchKeysFail        = errors.New("invalid rsa public key")
+	ErrInvalidClientID      = errors.New("invalid client_id")
+	ErrInvalidClientSecret  = errors.New("invalid client_secret")
+	ErrInvalidRedirectURI   = errors.New("invalid redirect_uri")
+	ErrTokenExpired         = errors.New("token expired")
+	ErrInvalidIssValue      = errors.New("invalid iss value")
+	ErrInvalidRefreshToken  = errors.New("invalid refresh token")
+	ErrInvalidIdentityCode  = errors.New("invalid identity code")
 	ErrInvalidIdentityToken = errors.New("invalid identity token")
 )
 
@@ -36,6 +36,8 @@ type JWTToken interface {
 	EmailVerified() bool
 	NonceSupported() bool
 	IsPrivateEmail() bool
+	RealUserStatus() int
+	Nonce() string
 	IsValid() (bool, error)
 }
 
@@ -160,6 +162,20 @@ func (t *appleToken) IsPrivateEmail() bool {
 	return t.claims.IsPrivateEmail
 }
 
+func (t *appleToken) RealUserStatus() int {
+	if t == nil || t.claims == nil {
+		return 0
+	}
+	return t.claims.RealUserStatus
+}
+
+func (t *appleToken) Nonce() string {
+	if t == nil || t.claims == nil {
+		return ""
+	}
+	return t.claims.Nonce
+}
+
 func (t *appleToken) IsValid() (bool, error) {
 	if t == nil || t.claims == nil {
 		return false, ErrInvalidTokenFormat
@@ -189,17 +205,19 @@ func (t *appleToken) String() string {
 }
 
 type appleClaim struct {
-	Iss            string `json:"iss"`       //签发者，固定值: https://appleid.apple.com
-	Aud            string `json:"aud"`       //App ID
-	Exp            int64  `json:"exp"`       //token过期时间
-	Iat            int64  `json:"iat"`       //token生成时间
-	Sub            string `json:"sub"`       //用户唯一标识
+	Iss            string `json:"iss"`   //签发者，固定值: https://appleid.apple.com
+	Sub            string `json:"sub"`   //用户唯一标识
+	Aud            string `json:"aud"`   //App ID
+	Iat            int64  `json:"iat"`   //token生成时间
+	Exp            int64  `json:"exp"`   //token过期时间
+	Nonce          string `json:"nonce"` //客户端设置的随机值
+	NonceSupported bool   `json:"nonce_supported"`
+	Email          string `json:"email"` //邮件
+	EmailVerified  bool   `json:"email_verified"`
+	IsPrivateEmail bool   `json:"is_private_email"`
+	RealUserStatus int    `json:"real_user_status"`
 	CHash          string `json:"c_hash"`    //
 	AuthTime       int64  `json:"auth_time"` //验证时间
-	Email          string `json:"email"`     //邮件
-	EmailVerified  bool   `json:"email_verified"`
-	NonceSupported bool   `json:"nonce_supported"`
-	IsPrivateEmail bool   `json:"is_private_email"`
 }
 
 func (c *appleClaim) UnmarshalJSON(data []byte) error {
@@ -238,6 +256,12 @@ func (c *appleClaim) UnmarshalJSON(data []byte) error {
 			c.NonceSupported, err = strconv.ParseBool(value)
 		case "is_private_email":
 			c.IsPrivateEmail, err = strconv.ParseBool(value)
+		case "nonce":
+			c.Nonce = value
+		case "real_user_status":
+			var status int64
+			status, err = strconv.ParseInt(value, 10, 64)
+			c.RealUserStatus = int(status)
 		default:
 			err = fmt.Errorf("unmarshal claims fail, invalid key: %s", key)
 		}
